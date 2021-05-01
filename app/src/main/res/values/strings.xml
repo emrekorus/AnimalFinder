@@ -1,0 +1,30 @@
+<resources>
+    <string name="app_name">AnimalFinder</string>
+    <string name="play">Play</string>
+    <string name="best_point">Best Point</string>
+    <string name="select_animal">Please Select Below Animal</string>
+    <string name="level1">Level 1</string>
+    <string name="level2">Level 2</string>
+    <string name="level3">Level 3</string>
+    <string name="level4">Level 4</string>
+    <string name="level5">Level 5</string>
+    <string name="animal_finder">Animal Finder</string>
+    <string name="your_score">Your Score</string>
+    <string name="try_again">Try Again</string>
+
+    <string name="animal">Animal</string>
+    <string name="bat">Bat</string>
+    <string name="bear">Bear</string>
+    <string name="cat">Cat</string>
+    <string name="chicken">Chicken</string>
+    <string name="cock">Cock</string>
+    <string name="cow">Cow</string>
+    <string name="dog">Dog</string>
+    <string name="duck">Duck</string>
+    <string name="elephant">Elephant</string>
+    <string name="horse">Horse</string>
+    <string name="lion">Lion</string>
+    <string name="monkey">Monkey</string>
+    <string name="parrot">Parrot</string>
+    <string name="sheep">Sheep</string>
+</resources>
