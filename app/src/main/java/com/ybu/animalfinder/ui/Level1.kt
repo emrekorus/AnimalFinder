@@ -1,12 +1,13 @@
 package com.ybu.animalfinder.ui
+
 import android.content.Intent
 import android.media.MediaPlayer
 import androidx.appcompat.app.AppCompatActivity
 import android.os.Bundle
 import android.os.CountDownTimer
 import android.os.Handler
+import android.os.Looper
 import android.speech.tts.TextToSpeech
-import android.util.Log
 import android.view.View
 import android.widget.ImageView
 import android.widget.TextView
@@ -16,35 +17,40 @@ import com.ybu.animalfinder.models.Animal
 import com.ybu.animalfinder.utils.Constants
 import java.util.*
 import kotlin.collections.ArrayList
-import kotlin.concurrent.schedule
 
-class Level1 : AppCompatActivity(),TextToSpeech.OnInitListener{
-    lateinit var animals:ArrayList<Animal>
+class Level1 : AppCompatActivity(), TextToSpeech.OnInitListener {
+    lateinit var animals: ArrayList<Animal>
     lateinit var wantedAnimal: Animal
     lateinit var timer: CountDownTimer
-    private var tts : TextToSpeech? = null
-    private var mediaPlayer : MediaPlayer? = null
+    private var tts: TextToSpeech? = null
+    private var mediaPlayer: MediaPlayer? = null
+    private var counter: Int = 0
+    private var score: Int = 0
 
 
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
         setContentView(R.layout.activity_level1)
 
-        tts = TextToSpeech(this,this)
+        tts = TextToSpeech(this, this)
         prepareUI()
         setupTimer()
     }
 
     private fun setupTimer() {
         val tvTimer = findViewById<TextView>(R.id.tvTimer)
-        timer = object: CountDownTimer(20000, 1000) {
+        timer = object : CountDownTimer(20000, 1000) {
             override fun onTick(millisUntilFinished: Long) {
-                tvTimer.text = (millisUntilFinished/1000).toString()
+                tvTimer.text = (millisUntilFinished / 1000).toString()
             }
 
             override fun onFinish() {
-                Toast.makeText(this@Level1,"Time is Up",Toast.LENGTH_LONG).show()
+                if (tts != null) {
+                    tts!!.speak("Time is Up", TextToSpeech.QUEUE_FLUSH, null, "")
+                }
+                Toast.makeText(this@Level1, "Time is Up", Toast.LENGTH_LONG).show()
                 val intent = Intent(this@Level1, ScoreBoard::class.java)
+                intent.putExtra("Score", score)
                 startActivity(intent);
                 finish()
             }
@@ -52,7 +58,8 @@ class Level1 : AppCompatActivity(),TextToSpeech.OnInitListener{
         timer.start()
     }
 
-    private fun prepareUI(){
+    private fun prepareUI() {
+
         animals = Constants.getAnimals()
         val animal = animals.random();
         animals.remove(animal)
@@ -62,9 +69,9 @@ class Level1 : AppCompatActivity(),TextToSpeech.OnInitListener{
         val imgFirstAnimal = findViewById<ImageView>(R.id.imgFirstAnimal)
         val imgSecondAnimal = findViewById<ImageView>(R.id.imgSecondAnimal)
 
-        val randomlyGeneratedAnimals = arrayOf(animal,animal2)
+        val randomlyGeneratedAnimals = arrayOf(animal, animal2)
 
-        wantedAnimal =  randomlyGeneratedAnimals.random()
+        wantedAnimal = randomlyGeneratedAnimals.random()
 
         tvAnimal.text = wantedAnimal.name
 
@@ -73,6 +80,14 @@ class Level1 : AppCompatActivity(),TextToSpeech.OnInitListener{
 
         imgSecondAnimal.setImageResource(animal2.image!!)
         imgSecondAnimal.contentDescription = animal2.name
+
+        if (tts != null) {
+            tts!!.language = Locale.US
+            tts!!.speak("Find the ${wantedAnimal.name}. ${wantedAnimal.name} makes sound: ", TextToSpeech.QUEUE_FLUSH, null, "")
+            mediaPlayer = MediaPlayer.create(this@Level1, wantedAnimal.sound!!)
+            mediaPlayer!!.isLooping = true;
+            mediaPlayer!!.start()
+        }
     }
 
     fun imgViewClicked(view: View) {
@@ -80,42 +95,71 @@ class Level1 : AppCompatActivity(),TextToSpeech.OnInitListener{
         timer.cancel()
 
         val imgView = view as ImageView
-        if(imgView.contentDescription == wantedAnimal.name){
-            val intent = Intent(this, Level2::class.java)
-            startActivity(intent);
-            finish()
-        }
-        else{
+        if (imgView.contentDescription == wantedAnimal.name) {
+            if (tts != null) {
+                tts!!.speak("You got it", TextToSpeech.QUEUE_FLUSH, null, "")
+                val tvTimer = findViewById<TextView>(R.id.tvTimer)
+                val time: Int = tvTimer.text.toString().toInt()
+                score += Constants.LEVEL1_SCORE_SCALE * time
+                val tvScore = findViewById<TextView>(R.id.tvScore)
+                tvScore.text = score.toString()
+                counter++
+                Toast.makeText(this, "Your Score:" + score + "", Toast.LENGTH_LONG).show();
+            }
+            if (counter == 3) {
+                Handler(Looper.getMainLooper()).postDelayed({
+                    val intent = Intent(this, Level2::class.java)
+                    intent.putExtra("Score", score)
+                    startActivity(intent)
+                    finish()
+                }, 500)
 
-            Toast.makeText(this,"Wrong Animal Selected",Toast.LENGTH_LONG).show();
-            val intent = Intent(this, ScoreBoard::class.java)
-            startActivity(intent);
-            finish()
+            } else {
+                Handler(Looper.getMainLooper()).postDelayed({
+                    if (tts != null) {
+                        tts!!.stop()
+                    }
+                    if (mediaPlayer != null) {
+                        mediaPlayer!!.stop()
+                    }
+                    prepareUI()
+                    setupTimer()
+                }, 500)
+            }
+        } else {
+            if (tts != null) {
+                tts!!.speak("You selected wrong animal", TextToSpeech.QUEUE_FLUSH, null, "")
+            }
+            Handler(Looper.getMainLooper()).postDelayed({
+                Toast.makeText(this, "Wrong Animal Selected", Toast.LENGTH_LONG).show();
+                val intent = Intent(this, ScoreBoard::class.java)
+                intent.putExtra("Score", score)
+                startActivity(intent)
+                finish()
+            }, 1000)
+
         }
     }
 
 
     override fun onDestroy() {
         timer.cancel()
-        if(tts != null){
+        if (tts != null) {
             tts!!.stop()
             tts!!.shutdown()
         }
-        if(mediaPlayer != null){
+        if (mediaPlayer != null) {
             mediaPlayer!!.stop()
             mediaPlayer!!.release()
         }
-
         super.onDestroy()
     }
 
     override fun onInit(status: Int) {
-        if (status == TextToSpeech.SUCCESS){
-            if(tts != null) {
+        if (status == TextToSpeech.SUCCESS) {
+            if (tts != null) {
                 tts!!.language = Locale.US
                 tts!!.speak("Find the ${wantedAnimal.name}. ${wantedAnimal.name} makes sound: ", TextToSpeech.QUEUE_FLUSH, null, "")
-                mediaPlayer = MediaPlayer.create(this@Level1,wantedAnimal.sound!!)
-                mediaPlayer!!.start()
             }
 
         }

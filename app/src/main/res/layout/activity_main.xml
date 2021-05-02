@@ -1,49 +1,46 @@
 <?xml version="1.0" encoding="utf-8"?>
 <LinearLayout xmlns:android="http://schemas.android.com/apk/res/android"
-    android:orientation="vertical" android:layout_width="match_parent"
+    android:layout_width="match_parent"
     android:layout_height="match_parent"
-    android:background="@color/red"
-    android:gravity="center">
+    android:background="@drawable/background_gradient"
+    android:gravity="center"
+    android:orientation="vertical">
 
 
-    <TextView
+    <ImageView
+        android:id="@+id/imgScore"
         android:layout_width="match_parent"
-        android:layout_height="wrap_content"
-        android:text="@string/animal_finder"
-        android:gravity="center"
-        android:textStyle="bold"
-        android:layout_marginBottom="30dp"
-        android:textSize="30sp"
-        android:textColor="@color/white"/>
+        android:layout_height="300dp"
+        android:src="@drawable/logo" />
 
     <Button
         android:id="@+id/btnPlay"
         android:layout_width="wrap_content"
         android:layout_height="wrap_content"
         android:backgroundTint="@color/white"
-        android:textColor="@color/red"
         android:onClick="playGameClicked"
-        android:text="@string/play" />
+        android:text="@string/play"
+        android:textColor="@color/red" />
 
     <TextView
         android:layout_width="match_parent"
         android:layout_height="wrap_content"
-        android:text="@string/best_point"
-        android:gravity="center"
         android:layout_marginTop="30dp"
-        android:textStyle="bold"
+        android:gravity="center"
+        android:text="@string/best_point"
+        android:textColor="@color/white"
         android:textSize="20sp"
-        android:textColor="@color/white"/>
+        android:textStyle="bold" />
 
     <TextView
         android:id="@+id/tvBestPoint"
         android:layout_width="match_parent"
         android:layout_height="wrap_content"
-        android:text="0"
         android:gravity="center"
-        android:textStyle="bold"
+        android:text="0"
+        android:textColor="@color/white"
         android:textSize="20sp"
-        android:textColor="@color/white"/>
+        android:textStyle="bold" />
 
 
 </LinearLayout>

@@ -5,6 +5,8 @@ import android.media.MediaPlayer
 import androidx.appcompat.app.AppCompatActivity
 import android.os.Bundle
 import android.os.CountDownTimer
+import android.os.Handler
+import android.os.Looper
 import android.speech.tts.TextToSpeech
 import android.view.View
 import android.widget.ImageView
@@ -24,10 +26,18 @@ class Level5 : AppCompatActivity() , TextToSpeech.OnInitListener {
     lateinit var timer: CountDownTimer
     private var tts : TextToSpeech? = null
     private var mediaPlayer : MediaPlayer? = null
+    private var counter: Int = 0
+    private var score: Int = 0
 
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
         setContentView(R.layout.activity_level5)
+
+        if (intent.extras != null) {
+            score = intent.extras!!.getInt("Score")
+            val tvScore = findViewById<TextView>(R.id.tvScore)
+            tvScore.text = score.toString()
+        }
 
         tts = TextToSpeech(this,this)
         prepareUI()
@@ -42,8 +52,12 @@ class Level5 : AppCompatActivity() , TextToSpeech.OnInitListener {
             }
 
             override fun onFinish() {
+                if (tts != null) {
+                    tts!!.speak("Time is Up", TextToSpeech.QUEUE_FLUSH, null, "")
+                }
                 Toast.makeText(this@Level5,"Time is Up", Toast.LENGTH_LONG).show()
                 val intent = Intent(this@Level5, ScoreBoard::class.java)
+                intent.putExtra("Score", score)
                 startActivity(intent);
                 finish()
             }
@@ -109,6 +123,14 @@ class Level5 : AppCompatActivity() , TextToSpeech.OnInitListener {
 
         imgEighthAnimal.setImageResource(animal8.image!!)
         imgEighthAnimal.contentDescription = animal8.name
+
+        if (tts != null) {
+            tts!!.language = Locale.US
+            tts!!.speak("Find the ${wantedAnimal.name}. ${wantedAnimal.name} makes sound: ", TextToSpeech.QUEUE_FLUSH, null, "")
+            mediaPlayer = MediaPlayer.create(this@Level5, wantedAnimal.sound!!)
+            mediaPlayer!!.isLooping = true;
+            mediaPlayer!!.start()
+        }
     }
 
     fun imgViewClicked(view: View) {
@@ -117,16 +139,49 @@ class Level5 : AppCompatActivity() , TextToSpeech.OnInitListener {
 
         val imgView = view as ImageView
         if(imgView.contentDescription == wantedAnimal.name){
-            val intent = Intent(this, ScoreBoard::class.java)
-            startActivity(intent);
-            finish()
+            if (tts != null) {
+                tts!!.speak("You got it", TextToSpeech.QUEUE_FLUSH, null, "")
+                val tvTimer = findViewById<TextView>(R.id.tvTimer)
+                val time: Int = tvTimer.text.toString().toInt()
+                score += Constants.LEVEL5_SCORE_SCALE * time
+                val tvScore = findViewById<TextView>(R.id.tvScore)
+                tvScore.text = score.toString()
+                counter++
+                Toast.makeText(this, "Your Score:" + score + "", Toast.LENGTH_LONG).show();
+            }
+
+            if (counter == 3) {
+                Handler(Looper.getMainLooper()).postDelayed({
+                    val intent = Intent(this, ScoreBoard::class.java)
+                    intent.putExtra("Score", score)
+                    startActivity(intent)
+                    finish()
+                }, 500)
+            } else {
+                Handler(Looper.getMainLooper()).postDelayed({
+                    if (tts != null) {
+                        tts!!.stop()
+                    }
+                    if (mediaPlayer != null) {
+                        mediaPlayer!!.stop()
+                    }
+                    prepareUI()
+                    setupTimer()
+                }, 500)
+            }
         }
         else{
 
-            Toast.makeText(this,"Wrong Animal Selected", Toast.LENGTH_LONG).show();
-            val intent = Intent(this, ScoreBoard::class.java)
-            startActivity(intent);
-            finish()
+            if (tts != null) {
+                tts!!.speak("You selected wrong animal", TextToSpeech.QUEUE_FLUSH, null, "")
+            }
+            Handler(Looper.getMainLooper()).postDelayed({
+                Toast.makeText(this, "Wrong Animal Selected", Toast.LENGTH_LONG).show();
+                val intent = Intent(this, ScoreBoard::class.java)
+                intent.putExtra("Score", score)
+                startActivity(intent)
+                finish()
+            }, 1000)
         }
     }
 
@@ -145,11 +200,11 @@ class Level5 : AppCompatActivity() , TextToSpeech.OnInitListener {
     }
 
     override fun onInit(status: Int) {
-        if (status == TextToSpeech.SUCCESS){
-            tts!!.language = Locale.US
-            tts!!.speak("Find the ${wantedAnimal.name}. ${wantedAnimal.name} makes sound: ", TextToSpeech.QUEUE_FLUSH, null, "")
-            mediaPlayer = MediaPlayer.create(this@Level5,wantedAnimal.sound!!)
-            mediaPlayer!!.start()
+        if (status == TextToSpeech.SUCCESS) {
+            if (tts != null) {
+                tts!!.language = Locale.US
+                tts!!.speak("Find the ${wantedAnimal.name}. ${wantedAnimal.name} makes sound: ", TextToSpeech.QUEUE_FLUSH, null, "")
+            }
         }
     }
 }
